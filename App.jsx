@@ -7,34 +7,24 @@ import HomeScreen from "./screens/HomeScreen";
 import AboutScreen from "./screens/AboutScreen";
 
 const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
+//const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
-    // <NavigationContainer>
-    //   <Stack.Navigator>
-    //     <Stack.Screen
-    //       name="Home"
-    //       component={HomeScreen}
-    //       options={{ title: "Welcome to Durak Game!" }}
-    //     />
-    //     <Stack.Screen name="About" component={AboutScreen} />
-    //   </Stack.Navigator>
-    // </NavigationContainer>
-
     <NavigationContainer>
-      {/* <Stack.Navigator>
+      <Stack.Navigator>
         <Stack.Screen
           name="Home"
           component={HomeScreen}
           options={{ title: "Welcome to Durak Game!" }}
         />
         <Stack.Screen name="About" component={AboutScreen} />
-      </Stack.Navigator> */}
-      <MyTabs />
+      </Stack.Navigator>
     </NavigationContainer>
 
-    // <HomeScreen />
+    // <NavigationContainer>
+    //   <MyTabs />
+    // </NavigationContainer>
   );
 }
 
