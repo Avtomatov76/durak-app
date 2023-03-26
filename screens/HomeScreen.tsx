@@ -179,6 +179,17 @@ export default function HomeScreen(props: any) {
 
     getTrump();
     dealCards();
+
+    if (testTurn == "ai") {
+      console.log("Now it's AI's turn: ", testTurn)
+
+    }
+
+    if (testTurn == "user") {
+      console.log("Now it's User's turn: ", testTurn)
+
+
+    }
   }
 
   console.log("Deck: ", deck, deck.length);
