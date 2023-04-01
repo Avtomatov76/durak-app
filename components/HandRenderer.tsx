@@ -5,13 +5,19 @@ export default function HandRederer(props: any) {
   let flag = props.flag;
 
   const handlePress = (el: any) => {
-    props.updateGameHand(el, flag);
+    if (!props.isUserActive) {
+      console.log("Please wait for the other party to make a play!!");
+      return;
+    }
+
+    if (props.turn == "user") props.handleTurn(el, "userAttack");
+    if (props.turn == "ai") props.handleTurn(el, "userDefense");
   };
 
   if (!props.hand) return null;
 
   return (
-    <View style={{ flexDirection: "row" }}>
+    <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
       {props.hand.map((el: any, index: any) => (
         <TouchableOpacity
           key={index}
@@ -21,14 +27,16 @@ export default function HandRederer(props: any) {
             height: 80,
             justifyContent: "center",
             borderWidth: 1,
-            borderColor: flag == "ai" ? "#000000" : "#FFFFFF",
+            borderColor: "#FFFFFF", //flag == "ai" ? "#000000" : "#FFFFFF",
             borderRadius: 10,
-            margin: 2,
+            marginLeft: -10,
+            marginRight: -10,
+            backgroundColor: "blue",
           }}
         >
           <Text
             style={{
-              color: flag == "ai" ? "#000000" : "#FFFFFF",
+              color: "#FFFFFF", //flag == "ai" ? "#000000" : "#FFFFFF",
               fontSize: 24,
             }}
             onPress={() => handlePress(el)}

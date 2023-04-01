@@ -1,96 +1,57 @@
 import { useState } from "react";
 import { View, Text, Button, Dimensions } from "react-native";
+import { delay } from "../Config";
 import { getDeck } from "../assets/cards/Deck";
 import Ai from "../components/Ai";
 import CurrentPlay from "../components/CurrentPlay";
 import User from "../components/User";
+import { sortAiHand } from "../functions/aiFunctions";
+import {
+  checkForLoser,
+  checkHandForMatches,
+  checkIfCardIsLegal,
+  checkIfValidDefense,
+  getTrump,
+  getTurn,
+  removeCardsFromDeck,
+  sortHand,
+} from "../functions/playFunctions";
+import LoserDisplay from "../modals/LoserDisplay";
 
 let deck = getDeck();
-let testTrump = "";
-let testTurn = "";
+let aiHand: any[] = [];
+let userHand: any[] = [];
+let trump = "";
+let turn = "";
+let playHandObj = {
+  ai: [] as any,
+  user: [] as any,
+};
 
-function checkForLoser() {
-  // checks if deck is gone, and which player still has cards --> after every turn
-  // if Loser -> display winning Banner, setGameStatus(false), remove player's and AI decks
-}
+console.log("Initial deck: ", deck);
 
 export default function HomeScreen(props: any) {
   const [gameCount, setGameCount] = useState(0);
   const [gameStatus, setGameStatus] = useState(false);
-  const [userHand, setUserHand] = useState<any>([]);
-  const [aiHand, setAiHand] = useState<any>([]);
-  const [trump, setTrump] = useState("");
-  const [turn, setTurn] = useState("");
+  const [isUserActive, setIsUserActive] = useState(false);
   const [cardsInPlay, setCardsInPlay] = useState<any>({
     ai: [] as any,
     user: [] as any,
   });
-  const [gameHand, setGameHand] = useState<any>([]);
+  const [isLoser, setIsLoser] = useState("");
 
-  const updateGameHand = (el: any, flag: any) => {
-    let aiPlay = cardsInPlay.ai.slice() || ([] as any);
-    let userPlay = cardsInPlay.user.slice() || ([] as any);
+  function startGame() {
+    let count = gameCount;
+    count++;
+    setGameCount(count);
+    setGameStatus(true);
 
-    let aiHandArr = aiHand.slice() || ([] as any);
-    let userHandArr = userHand.slice() || ([] as any);
+    trump = getTrump(deck);
+    dealCards();
 
-    let numAiCards = aiPlay.length;
-    let numUserCards = userPlay.length;
-
-    if (testTurn == "ai" && numAiCards > userHand.length + numUserCards) {
-      console.log("CAN'T ADD ANY MORE CARDS!!");
-      return;
-    }
-
-    if (testTurn == "user" && numUserCards > aiHand.length + numAiCards) {
-      console.log("CAN'T ADD ANY MORE CARDS!!");
-      return;
-    }
-
-    if (flag == "ai") {
-      aiPlay.push(el);
-      aiHandArr.splice(aiHandArr.indexOf(el), 1);
-    }
-    if (flag == "user") {
-      userPlay.push(el);
-      userHandArr.splice(userHandArr.indexOf(el), 1);
-    }
-
-    setCardsInPlay({
-      ai: aiPlay.slice(),
-      user: userPlay.slice(),
-    });
-
-    setAiHand(aiHandArr.slice());
-    setUserHand(userHandArr.slice());
-  };
-
-  console.log(gameHand.length);
-  console.log(gameHand);
-  console.log("Cards in play array obj: ", cardsInPlay);
-  console.log("User Hand: ", userHand);
-  console.log("AI hand: ", aiHand);
-
-  // Start Game
-  // On start,Shuffle deck, determine trump (display it), deal player and Computer
-  // Determine whose turn it is (check player/computer's deck for lowest trump --> whoever has the lowest, starts)
-  // if neithe rhave trump, do a random coin toss and display who turn it is
-
-  //
-  function getTrump() {
-    // get last card from deck and assign to trump (kins)
-    let el = deck[51];
-    let trump = "";
-    trump = el.charAt(2);
-
-    setTrump(trump);
-    testTrump = trump;
-    // place the card at beginning of deck
-    let trumpCard = deck.pop() || "";
-    console.log(trumpCard);
-
-    deck.unshift(trumpCard);
-    console.log("Card moved to the beginning: ", deck);
+    console.log(turn);
+    if (turn == "user") setIsUserActive(true);
+    if (turn == "ai") beginAiTurn("");
   }
 
   function dealCards() {
@@ -105,123 +66,335 @@ export default function HomeScreen(props: any) {
       user.push(deck.pop());
     }
 
-    getTurn(ai, user);
+    turn = getTurn(turn, trump, ai, user);
 
-    setAiHand(ai.slice());
-    setUserHand(user.slice());
+    let sortedAiHand = sortHand(ai, trump);
+    let sortedUserHand = sortAiHand(user, trump);
+
+    aiHand = sortedAiHand.slice();
+    userHand = sortedUserHand.slice();
   }
 
-  function getTurn(aiArray: any, userArray: any) {
-    // at game start - check whose turn it is
-    let candidates: any[] = [];
-    let lowestCard = "";
-    let combinedArray = aiArray.concat(userArray);
-    console.log(combinedArray);
+  function drawCards(flag: any) {
+    console.log("Drawing cards...");
+    // check if there are cards in deck
+    if (deck.length == 0) console.log("No more cards left in deck!!");
+    // check hands for missing cards --> if 6 ore more - skip
+    if (flag == "userAttack" && userHand.length < 6) {
+      userHand = removeCardsFromDeck(deck, userHand, trump) || ([] as any);
+
+      if (aiHand.length < 6) {
+        aiHand = removeCardsFromDeck(deck, aiHand, trump) || ([] as any);
+      }
+    }
+
+    if (flag == "aiAttack" && aiHand.length < 6) {
+      aiHand = removeCardsFromDeck(deck, aiHand, trump) || ([] as any);
+
+      if (userHand.length < 6) {
+        userHand = removeCardsFromDeck(deck, userHand, trump) || ([] as any);
+      }
+    }
+  }
+
+  async function beginAiTurn(flag: any) {
+    await delay(1000);
+    console.log("AI makes a move... flag : ", flag);
+
+    if (flag == "userSkip") {
+      completeAiTurn("userSkip");
+      await delay(1000);
+    }
+
+    let cardMatch = null;
+    // check if cards in cardsInPlay --> if there are cards - check what cards are played and look for matching value in aiHand
+    let aiPlay = playHandObj.ai.slice() || ([] as any); //cardsInPlay.ai.slice() || ([] as any);
+    let userPlay = playHandObj.user.slice() || ([] as any); //cardsInPlay.user.slice() || ([] as any);
+
+    let aiHandArr = aiHand.slice() || ([] as any);
+    let userHandArr = userHand.slice() || ([] as any);
+
+    let numAiCards = aiPlay.length;
+    let numUserCards = userPlay.length;
+
+    if (numAiCards > userHand.length + numUserCards) {
+      console.log("CAN'T ADD ANY MORE CARDS!!");
+      getUserResponse();
+    }
 
     console.log("Turn: ", turn);
-    console.log("Trump suit: ", testTrump);
-    console.log(userArray);
-    console.log(aiArray);
+    console.log("Num ai cards: ", numAiCards);
+    console.log("AI play: ", aiPlay);
+    // If aiPlay is empty, find a low card and play it
+    if (numAiCards == 0 || flag == "userSkip" || flag == "userDone") {
+      if (flag == "userSkip" || "userDone") {
+        aiPlay = [];
+        userPlay = [];
+      }
+      //console.log("Turn: ", turn);
+      let cardToPlay = aiHandArr[0];
+      aiHandArr.splice(0, 1);
+      console.log("--- card to play --- ", cardToPlay);
 
-    if (turn == "") {
-      aiArray.forEach((el: any) => {
-        if (el.charAt(2) == testTrump) candidates.push(el + "a");
-      });
+      aiPlay.push(cardToPlay);
 
-      userArray.forEach((el: any) => {
-        if (el.charAt(2) == testTrump) candidates.push(el + "p");
-      });
+      updateCardsInPlay(aiPlay, userPlay);
 
-      console.log("Candidates : ", candidates);
+      aiHand = aiHandArr.slice();
 
-      if (candidates.length > 0) {
-        candidates.sort(
-          (a: any, b: any) =>
-            parseInt(a.substring(0, 2)) - parseInt(b.substring(0, 2))
-        );
-        lowestCard = candidates[0];
+      getUserResponse();
+    } else if (
+      numAiCards == numUserCards &&
+      aiHandArr.length > 0 &&
+      userHandArr.length == 0
+    ) {
+      completeAiTurn("");
+    } else {
+      cardMatch = checkHandForMatches(
+        [...aiPlay, ...userPlay],
+        aiHandArr,
+        trump
+      );
+      console.log("MATCHED CARD: ", cardMatch);
+      // if found matching cards - add one to the cardsInPlay and let user respond (un-hide user cards)
+      if (cardMatch != "") {
+        aiPlay.push(cardMatch);
+
+        updateCardsInPlay(aiPlay, userPlay);
+
+        aiHandArr.splice(aiHandArr.indexOf(cardMatch), 1);
+
+        aiHand = aiHandArr.slice();
+
+        getUserResponse();
       } else {
-        combinedArray.sort(
-          (a: any, b: any) =>
-            parseInt(a.substring(0, 2)) - parseInt(b.substring(0, 2))
+        completeAiTurn("");
+      }
+    }
+  }
+
+  async function handleUserTurn(el: any, flag: any) {
+    console.log("User: ", el, flag);
+
+    let aiPlay = playHandObj.ai.slice() || ([] as any); //cardsInPlay.ai.slice() || ([] as any);
+    let userPlay = playHandObj.user.slice() || ([] as any); //cardsInPlay.user.slice() || ([] as any);
+
+    let aiHandArr = aiHand.slice() || ([] as any);
+    let userHandArr = userHand.slice() || ([] as any);
+
+    let numAiCards = aiPlay.length;
+    let numUserCards = userPlay.length;
+
+    if (flag == "userAttack" && numUserCards > aiHand.length + numAiCards) {
+      console.log("CAN'T ADD ANY MORE CARDS!!");
+      completeUserTurn();
+    }
+
+    if (flag == "userAttack") {
+      let isLegal = checkIfCardIsLegal(el, [...aiPlay, ...userPlay]);
+      console.log("Can this card be played? ", isLegal);
+
+      if (isLegal) {
+        userPlay.push(el);
+        userHandArr.splice(userHandArr.indexOf(el), 1);
+
+        updateCardsInPlay(aiPlay, userPlay);
+
+        aiHand = aiHandArr.slice();
+        userHand = userHandArr.slice();
+
+        await delay(1000);
+        console.log("User hand: ", userHand);
+        handleAiDefence(userPlay, aiPlay, trump);
+      } else {
+        console.log("You cannot play this card!!  Please select another card!");
+      }
+    }
+
+    if (flag == "userDefense") {
+      let isValidDefense = checkIfValidDefense(el, aiPlay, userPlay, trump);
+      console.log("Can I defend with this card? ", isValidDefense);
+
+      if (isValidDefense) {
+        let counterCardIndex = userHand.indexOf(el);
+        userHand.splice(counterCardIndex, 1);
+        userPlay[aiPlay.length - 1] = el;
+
+        updateCardsInPlay(aiPlay, userPlay);
+      } else {
+        console.log(
+          "You cannot defend with this this card!!  Please select another card!"
         );
-        lowestCard = combinedArray[0];
+        return;
       }
 
-      if (candidates.length > 0 && lowestCard[3] == "a")
-        testTurn = "ai"; //setTurn("ai");
-      else if (candidates.length > 0 && lowestCard[3] == "p")
-        testTurn = "user"; //setTurn("user");
-      else {
-        if (aiArray.includes(lowestCard)) testTurn = "ai";
-        if (userArray.includes(lowestCard)) testTurn = "user";
+      beginAiTurn("");
+    }
+  }
+
+  function handleAiDefence(userPlay: any, aiPlay: any, trump: any) {
+    console.log("AI Defending...");
+    console.log("AI hand: ", aiHand);
+
+    console.log("User Play: ", userPlay);
+    console.log("AI Play: ", aiPlay);
+
+    if (userPlay.length > aiPlay.length) {
+      let index = userPlay.length - 1;
+      let cardToBeat = userPlay[index];
+      let cardToBeatValue = parseInt(cardToBeat.substring(0, 2));
+      let cardToBeatSuit = cardToBeat[2];
+
+      console.log("Card to beat: ", cardToBeat);
+      console.log("Card to beat value: ", cardToBeatValue);
+      console.log("Card to beat suit : ", cardToBeatSuit);
+
+      let counterCard = "";
+
+      counterCard = aiHand.find(
+        (c: any) =>
+          parseInt(c.substring(0, 2)) > cardToBeatValue &&
+          c[2] == cardToBeatSuit
+      );
+
+      if (!counterCard && cardToBeatSuit != trump)
+        counterCard = aiHand.find((c: any) => c[2] == trump);
+
+      console.log("Counter card: ", counterCard);
+
+      if (!counterCard) {
+        console.log("Can't find card to counter!!  Picking up cards...");
       }
 
-      console.log("Sorted candidates: ", candidates);
-      console.log("Combined array: ", combinedArray);
-      console.log("Lowest card is : ", lowestCard);
-      console.log("Whose turn: ", testTurn);
-    }
+      if (counterCard) {
+        let counterCardIndex = aiHand.indexOf(counterCard);
+        aiHand.splice(counterCardIndex, 1);
+        aiPlay[index] = counterCard;
 
-    // 1st game --> lowest trump or coin toss
-    // games > 1 --> whoever wins, starts
-    // attacks/defense turn logic --> if defends - defender gets a turn, if picks up - the other player gets a turn
-    // calls isLoser()
-  }
-
-  function startGame() {
-    console.log("Start game");
-
-    let count = gameCount;
-    count++;
-    setGameCount(count);
-    setGameStatus(true);
-
-    getTrump();
-    dealCards();
-
-    if (testTurn == "ai") {
-      console.log("Now it's AI's turn: ", testTurn)
-
-    }
-
-    if (testTurn == "user") {
-      console.log("Now it's User's turn: ", testTurn)
-
-
+        updateCardsInPlay(aiPlay, userPlay);
+      }
     }
   }
 
-  console.log("Deck: ", deck, deck.length);
-  console.log("Trump suit: ", trump);
-  console.log(gameCount);
-  console.log("AI hand: ", aiHand);
-  console.log("User hand: ", userHand);
+  function completeAiTurn(flag: any) {
+    let loser = checkForLoser(deck, userHand, aiHand);
 
-  function attackOpponent(user: any) {
-    console.log("Attacking...");
+    if (loser == "na") {
+      // discard cardsInPlay
+      updateCardsInPlay([], []);
+      drawCards("aiAttack");
+      // set turn to "user"
+      flag == "userSkip" ? (turn = "ai") : (turn = "user");
+    } else endGame(loser);
   }
 
-  function pickUpCards(user: any) {
+  async function completeUserTurn() {
+    console.log(turn);
+    console.log("User cards in play size: ", playHandObj.user.length); //cardsInPlay.user.length);
+    console.log("AI cards in play size: ", playHandObj.ai.length); //cardsInPlay.ai.length);
+    let loser = checkForLoser(deck, userHand, aiHand);
+    if (loser != "na") {
+      console.log("And the loser is..... : ", loser);
+      endGame(loser);
+    }
+
+    //if (cardsInPlay.user.length > cardsInPlay.ai.length) {
+    if (playHandObj.user.length > playHandObj.ai.length) {
+      // air pick up cardsInPlay
+      aiHand = await pickUpCards(aiHand); // || [] as any
+      console.log("aiHand after pickup: ", aiHand);
+      drawCards("userAttack");
+      updateCardsInPlay([], []);
+
+      // turn still user's
+    } //else if (cardsInPlay.ai.length == cardsInPlay.user.length) {
+    else if (playHandObj.ai.length == playHandObj.user.length) {
+      updateCardsInPlay([], []);
+      drawCards("userAttack");
+      setIsUserActive(false);
+
+      turn = "ai";
+
+      console.log("Changed turn to: ", turn);
+      beginAiTurn("userDone");
+    }
+  }
+
+  async function pickUpCardsUser() {
+    userHand = await pickUpCards(userHand);
+    turn = "ai";
+
+    console.log("Cards in play after update: ", playHandObj); //cardsInPlay);
+    setIsUserActive(false);
+    beginAiTurn("userSkip");
+  }
+
+  async function pickUpCards(hand: any) {
     console.log("Picking up cards...");
+    // take cardsInPlay and add to aiHand
+    let newHand: any[] = [];
+    // let combinedHand = [...cardsInPlay.ai, ...cardsInPlay.user];
+    let combinedHand = [...playHandObj.ai, ...playHandObj.user];
+
+    newHand = sortAiHand([...hand, ...combinedHand], trump);
+    console.log("Cards in play before update: ", playHandObj); //cardsInPlay);
+
+    await updateCardsInPlay([], []);
+
+    return newHand;
   }
 
-  function completeTurn() {
-    console.log("Finishing a turn...");
+  function getUserResponse() {
+    console.log("Awaiting user response...");
+
+    // allows user to defend or pick cards up - set a flag
+    setIsUserActive(true);
+  }
+
+  async function updateCardsInPlay(aiPlay: any, userPlay: any) {
+    setCardsInPlay({
+      ai: aiPlay.length == 0 ? [] : aiPlay.slice(),
+      user: userPlay.length == 0 ? [] : userPlay.slice(),
+    });
+
+    playHandObj.ai = aiPlay.length == 0 ? [] : aiPlay.slice();
+    playHandObj.user = userPlay.length == 0 ? [] : userPlay.slice();
+  }
+
+  function endGame(loser: any) {
+    console.log("ENDING THE GAME...");
+
+    setIsLoser(loser);
+    setGameStatus(false);
+    // give an option to play again
+    // if ai picks cards (look for flag) - its user's turn again
+    // otherwise set turn to ai and prepare for defence
+
+    // set cardsInPlay to 0
+    // set both hands to 0
+    // ask if user wants to play another game
+    // set turn based on loser --> winner gets 1st turn
   }
 
   return (
     <View
       style={{
         flex: 1,
+        backgroundColor: "green",
       }}
     >
       {!gameStatus ? (
-        <View style={{ marginTop: 20, marginBottom: 20 }}>
+        <View
+          style={{
+            marginTop: 20,
+            marginBottom: 20,
+            alignSelf: "center",
+          }}
+        >
           <Button color="red" title="Start Game" onPress={startGame} />
         </View>
       ) : (
-        <View style={{ alignSelf: "center" }}>
+        <View style={{ alignSelf: "center", backgroundColor: "#FFFFFF" }}>
           <Text
             style={{
               color: "blue",
@@ -234,31 +407,30 @@ export default function HomeScreen(props: any) {
           </Text>
         </View>
       )}
-      <Ai
-        gameStatus={gameStatus}
-        aiHand={aiHand}
-        navigation={props.navigation}
-        attackOpponent={attackOpponent}
-        pickUpCards={pickUpCards}
-        completeTurn={completeTurn}
-        updateGameHand={updateGameHand}
-      />
-      <CurrentPlay
-        deck={deck.length}
-        //numCards={gameHand.length}
-        gameHand={cardsInPlay}
-        turn={testTurn}
-        trump={trump}
-        numCardsUser={userHand.length}
-        numCardsAi={aiHand.length}
-      />
-      <User
-        userHand={userHand}
-        attackOpponent={attackOpponent}
-        pickUpCards={pickUpCards}
-        completeTurn={completeTurn}
-        updateGameHand={updateGameHand}
-      />
+      <View style={{ flex: 1, justifyContent: "space-evenly" }}>
+        <Ai
+          gameStatus={gameStatus}
+          aiHand={aiHand}
+          navigation={props.navigation}
+        />
+        <CurrentPlay
+          deck={deck.length}
+          gameHand={cardsInPlay}
+          turn={turn}
+          trump={trump}
+          numCardsUser={userHand.length}
+          numCardsAi={aiHand.length}
+        />
+        <User
+          userHand={userHand}
+          turn={turn}
+          isUserActive={isUserActive}
+          pickUpCards={pickUpCardsUser}
+          completeTurn={completeUserTurn}
+          handleTurn={handleUserTurn}
+        />
+      </View>
+      {isLoser == "" ? null : <LoserDisplay loser={isLoser} />}
     </View>
   );
 }

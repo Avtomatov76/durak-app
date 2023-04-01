@@ -31,9 +31,10 @@ export default function CurrentPlay(props: any) {
   return (
     <View
       style={{
-        height: 400,
+        flex: 2,
         flexDirection: "column",
-        backgroundColor: "blue",
+        marginTop: 100,
+        //backgroundColor: "blue",
         alignItems: "center",
       }}
     >
@@ -46,9 +47,9 @@ export default function CurrentPlay(props: any) {
         numCardsUser={props.numCardsUser}
       />
 
-      <Text>AI</Text>
+      <Text style={{ color: "#FFFFFF" }}>AI</Text>
       <HandRenderer flag="game" hand={props.gameHand.ai} />
-      <Text>User</Text>
+      <Text style={{ color: "#FFFFFF" }}>User</Text>
       <HandRenderer flag="game" hand={props.gameHand.user} />
     </View>
   );

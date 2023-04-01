@@ -3,28 +3,39 @@ import { View, Text, Button, Dimensions } from "react-native";
 import HandRenderer from "./HandRenderer";
 
 export default function User(props: any) {
+  console.log("USER hand cards: ", props.userHand);
+
+  function endTurn() {
+    props.completeTurn("userAttack");
+  }
+
   return (
     <View
       style={{
-        height: 200,
+        //height: 200,
+        //flex: 1,
+        //alignSelf: "flex-end",
         alignItems: "center",
-        backgroundColor: "red",
+        //backgroundColor: "red",
         justifyContent: "center",
       }}
     >
-      <View style={{ flexDirection: "row", marginBottom: 10 }}>
-        <View style={{ marginRight: 30 }}>
-          <Button color="blue" title="Attack" onPress={props.attackOpponent} />
-        </View>
+      {!props.isUserActive ? null : (
+        <View style={{ flexDirection: "row", marginBottom: 10 }}>
+          <View style={{ marginRight: 30, borderRadius: 20 }}>
+            <Button
+              color="orange"
+              title="Pick Up"
+              onPress={props.pickUpCards}
+            />
+          </View>
 
-        <View style={{ marginRight: 30 }}>
-          <Button color="orange" title="Pick Up" onPress={props.pickUpCards} />
+          <View style={{ borderRadius: 20 }}>
+            <Button color="red" title="Done" onPress={endTurn} />
+          </View>
         </View>
+      )}
 
-        <View>
-          <Button color="green" title="Done" onPress={props.completeTurn} />
-        </View>
-      </View>
       <Text style={{ color: "#FFFFFF", marginBottom: 10, fontSize: 36 }}>
         You
       </Text>
@@ -32,8 +43,10 @@ export default function User(props: any) {
       {!props.userHand ? null : (
         <HandRenderer
           flag="user"
+          isUserActive={props.isUserActive}
+          turn={props.turn}
           hand={props.userHand}
-          updateGameHand={props.updateGameHand}
+          handleTurn={props.handleTurn}
         />
       )}
     </View>
