@@ -17,11 +17,18 @@ export default function HandRederer(props: any) {
   if (!props.hand) return null;
 
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        marginTop: 10,
+        marginBottom: 10,
+      }}
+    >
       {props.hand.map((el: any, index: any) => (
         <TouchableOpacity
           key={index}
-          disabled={props.flag == "game" ? true : false}
+          disabled={props.status == "game" ? true : false}
           style={{
             width: 50,
             height: 80,
@@ -29,15 +36,19 @@ export default function HandRederer(props: any) {
             borderWidth: 1,
             borderColor: "#FFFFFF", //flag == "ai" ? "#000000" : "#FFFFFF",
             borderRadius: 10,
-            marginLeft: -10,
-            marginRight: -10,
-            backgroundColor: "blue",
+            //marginLeft: -10,
+            //marginRight: -10,
+            margin: 2,
+            marginRight: 2,
+            marginLeft: props.status == "game" ? 0 : -10,
+            backgroundColor: flag == "ai" ? "red" : "blue",
           }}
         >
           <Text
             style={{
               color: "#FFFFFF", //flag == "ai" ? "#000000" : "#FFFFFF",
               fontSize: 24,
+              // marginLeft: -10,
             }}
             onPress={() => handlePress(el)}
           >

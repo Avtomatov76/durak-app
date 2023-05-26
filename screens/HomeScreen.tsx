@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Button, Dimensions } from "react-native";
+import { View, Text, Dimensions } from "react-native";
+import { Modal, Portal, Provider, Button } from "react-native-paper";
 import { delay } from "../Config";
 import { getDeck } from "../assets/cards/Deck";
 import Ai from "../components/Ai";
@@ -17,6 +18,7 @@ import {
   sortHand,
 } from "../functions/playFunctions";
 import LoserDisplay from "../modals/LoserDisplay";
+import CurrentPlayInfo from "../components/CurrentPlayInfo";
 
 let deck = getDeck();
 let aiHand: any[] = [];
@@ -39,6 +41,24 @@ export default function HomeScreen(props: any) {
     user: [] as any,
   });
   const [isLoser, setIsLoser] = useState("");
+  const [showLoser, setShowLoser] = useState(false);
+
+  function resetGame() {
+    console.log("Resetting the game...");
+
+    deck = getDeck();
+    aiHand = [];
+    userHand = [];
+    trump = "";
+    turn = "";
+    playHandObj = {
+      ai: [] as any,
+      user: [] as any,
+    };
+
+    setShowLoser(false);
+    startGame();
+  }
 
   function startGame() {
     let count = gameCount;
@@ -232,7 +252,7 @@ export default function HomeScreen(props: any) {
     }
   }
 
-  function handleAiDefence(userPlay: any, aiPlay: any, trump: any) {
+  async function handleAiDefence(userPlay: any, aiPlay: any, trump: any) {
     console.log("AI Defending...");
     console.log("AI hand: ", aiHand);
 
@@ -264,6 +284,7 @@ export default function HomeScreen(props: any) {
 
       if (!counterCard) {
         console.log("Can't find card to counter!!  Picking up cards...");
+        aiHand = await pickUpCards(aiHand);
       }
 
       if (counterCard) {
@@ -365,6 +386,7 @@ export default function HomeScreen(props: any) {
     console.log("ENDING THE GAME...");
 
     setIsLoser(loser);
+    setShowLoser(true);
     setGameStatus(false);
     // give an option to play again
     // if ai picks cards (look for flag) - its user's turn again
@@ -377,60 +399,76 @@ export default function HomeScreen(props: any) {
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "green",
-      }}
-    >
-      {!gameStatus ? (
+    <Provider>
+      <Portal>
         <View
           style={{
-            marginTop: 20,
-            marginBottom: 20,
-            alignSelf: "center",
+            flex: 1,
+            backgroundColor: "green",
           }}
         >
-          <Button color="red" title="Start Game" onPress={startGame} />
+          {!gameStatus ? (
+            <View
+              style={{
+                marginTop: 20,
+                marginBottom: 20,
+                alignSelf: "center",
+              }}
+            >
+              <Button buttonColor="red" textColor="#FFFFFF" onPress={startGame}>
+                Start Game
+              </Button>
+            </View>
+          ) : null}
+
+          <View style={{ flex: 1, justifyContent: "space-evenly" }}>
+            <CurrentPlayInfo
+              turn={turn}
+              deck={deck.length}
+              trump={trump}
+              gameStatus={gameStatus}
+              //numCards={props.gameHand.length + props.gameHand.length || 0}
+              numCardsUser={userHand.length}
+              numCardsAi={aiHand.length}
+            />
+            <Ai
+              gameStatus={gameStatus}
+              aiHand={aiHand}
+              navigation={props.navigation}
+            />
+            <CurrentPlay
+              deck={deck.length}
+              gameHand={cardsInPlay}
+              turn={turn}
+              trump={trump}
+              numCardsUser={userHand.length}
+              numCardsAi={aiHand.length}
+            />
+            <User
+              userHand={userHand}
+              turn={turn}
+              deck={deck}
+              isUserActive={isUserActive}
+              pickUpCards={pickUpCardsUser}
+              completeTurn={completeUserTurn}
+              handleTurn={handleUserTurn}
+            />
+          </View>
+          <LoserDisplay
+            showLoser={showLoser}
+            hideLoser={() => setShowLoser(false)}
+            loser={isLoser}
+            resetGame={resetGame}
+          />
+          {/* {isLoser == "" ? null : (
+            <LoserDisplay
+              showLoser={showLoser}
+              hideLoser={() => setShowLoser(false)}
+              loser={isLoser}
+            />
+          )} */}
         </View>
-      ) : (
-        <View style={{ alignSelf: "center", backgroundColor: "#FFFFFF" }}>
-          <Text
-            style={{
-              color: "blue",
-              fontSize: 24,
-              marginTop: 10,
-              marginBottom: 10,
-            }}
-          >
-            Game Started!!
-          </Text>
-        </View>
-      )}
-      <View style={{ flex: 1, justifyContent: "space-evenly" }}>
-        <Ai
-          gameStatus={gameStatus}
-          aiHand={aiHand}
-          navigation={props.navigation}
-        />
-        <CurrentPlay
-          deck={deck.length}
-          gameHand={cardsInPlay}
-          turn={turn}
-          trump={trump}
-          numCardsUser={userHand.length}
-          numCardsAi={aiHand.length}
-        />
-        <User
-          userHand={userHand}
-          turn={turn}
-          isUserActive={isUserActive}
-          pickUpCards={pickUpCardsUser}
-          completeTurn={completeUserTurn}
-          handleTurn={handleUserTurn}
-        />
-      </View>
-      {isLoser == "" ? null : <LoserDisplay loser={isLoser} />}
-    </View>
+      </Portal>
+    </Provider>
   );
 }

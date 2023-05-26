@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, Button, Dimensions } from "react-native";
+import { View, Text, Dimensions } from "react-native";
+import { Button } from "react-native-paper";
 import HandRenderer from "./HandRenderer";
 
 export default function User(props: any) {
@@ -20,25 +21,52 @@ export default function User(props: any) {
         justifyContent: "center",
       }}
     >
+      <View style={{ marginLeft: 80, marginBottom: 100 }}>
+        <View
+          style={{
+            position: "absolute",
+            width: 50,
+            height: 30,
+            backgroundColor: "brown",
+            //marginBottom: 10,
+          }}
+        >
+          <Text style={{ color: "#FFFFFF" }}>{props.deck[0]}</Text>
+        </View>
+        <View
+          style={{
+            position: "absolute",
+            width: 30,
+            height: 50,
+            backgroundColor: "purple",
+            marginLeft: 30,
+            marginTop: -10,
+          }}
+        >
+          <Text style={{ color: "#FFFFFF" }}>{props.deck.length}</Text>
+        </View>
+      </View>
       {!props.isUserActive ? null : (
         <View style={{ flexDirection: "row", marginBottom: 10 }}>
           <View style={{ marginRight: 30, borderRadius: 20 }}>
             <Button
-              color="orange"
-              title="Pick Up"
+              buttonColor="orange"
+              textColor="#FFFFFF"
               onPress={props.pickUpCards}
-            />
+            >
+              Pick Up
+            </Button>
           </View>
 
           <View style={{ borderRadius: 20 }}>
-            <Button color="red" title="Done" onPress={endTurn} />
+            <Button buttonColor="black" textColor="#FFFFFF" onPress={endTurn}>
+              Pass
+            </Button>
           </View>
         </View>
       )}
 
-      <Text style={{ color: "#FFFFFF", marginBottom: 10, fontSize: 36 }}>
-        You
-      </Text>
+      {/* <Text style={{ color: "#FFFFFF", fontSize: 36 }}>You</Text> */}
 
       {!props.userHand ? null : (
         <HandRenderer

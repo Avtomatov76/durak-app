@@ -6,10 +6,16 @@ export function checkForLoser(deck: any, userHand: any, aiHand: any) {
   }
 
   // Check ai and user hands
+  if (aiHand.length == 0 && userHand.length == 0) {
+    console.log("No one lost!!");
+    return "wash";
+  }
+
   if (aiHand.length == 0) {
     console.log("User is a loser!!");
     return "user";
   }
+
   if (userHand.length == 0) {
     console.log("AI is a loser!!");
     return "ai";
