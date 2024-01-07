@@ -6,17 +6,19 @@ export function checkForLoser(deck: any, userHand: any, aiHand: any) {
   }
 
   // Check ai and user hands
-  if (aiHand.length == 0 && userHand.length == 0) {
+  if (deck.length == 0 && aiHand.length == 0 && userHand.length == 0) {
     console.log("No one lost!!");
     return "wash";
   }
 
-  if (aiHand.length == 0) {
+  if (deck.length == 0 && aiHand.length == 0 && userHand.length > 1) {
+    // Changed for testing from '&& userHand.length > 0' !!!
     console.log("User is a loser!!");
     return "user";
   }
 
-  if (userHand.length == 0) {
+  if (deck.length == 0 && userHand.length == 0 && aiHand.length > 1) {
+    // Changed for testing from '&& aiHand.length > 0' !!!
     console.log("AI is a loser!!");
     return "ai";
   }
@@ -37,8 +39,6 @@ export function getTurn(turn: any, trump: any, aiArray: any, userArray: any) {
     userArray.forEach((el: any) => {
       if (el.charAt(2) == trump) candidates.push(el + "p");
     });
-
-    //console.log("Candidates : ", candidates);
 
     if (candidates.length > 0) {
       candidates.sort(
@@ -79,12 +79,10 @@ export function checkIfCardIsLegal(el: any, currentPlay: any) {
   return true;
 }
 
-export function sortHand(hand: any, trump: any) {
+export function sortHand(hand: any, trump: any, player: any) {
   let sortedHand: any[] = [];
   let trumpCards: any[] = [];
   let otherCards: any[] = [];
-
-  //console.log("Hand to sort: ", hand);
 
   hand.sort(
     (a: any, b: any) =>
@@ -97,15 +95,16 @@ export function sortHand(hand: any, trump: any) {
     } else otherCards.push(card);
   });
 
-  if (trumpCards.length > 0) sortedHand = [...otherCards, ...trumpCards];
-  else sortedHand = hand.slice();
+  if (player == "user")
+    otherCards.sort((a: any, b: any) => a[2].localeCompare(b[2]));
 
+  if (trumpCards.length > 0) sortedHand = [...otherCards, ...trumpCards];
+  else sortedHand = otherCards.slice();
   return sortedHand;
 }
 
 export function checkHandForMatches(playHand: any, aiHand: any, trump: any) {
   let match = "";
-  console.log("CHECK FOR CARDS DATA: ", playHand, aiHand, trump);
 
   playHand.forEach((card: any) => {
     let cardValue = parseInt(card.substring(0, 2));
@@ -122,7 +121,12 @@ export function checkHandForMatches(playHand: any, aiHand: any, trump: any) {
   return match;
 }
 
-export function removeCardsFromDeck(deck: any, hand: any, trump: any) {
+export function removeCardsFromDeck(
+  deck: any,
+  hand: any,
+  trump: any,
+  player: any
+) {
   if (deck.length == 0) return hand;
 
   let newHand = [];
@@ -130,12 +134,12 @@ export function removeCardsFromDeck(deck: any, hand: any, trump: any) {
   let cardsInDeck = deck.length;
   let numCardsToDraw = 6 - hand.length;
 
-  // check if deck has enoght cards
+  // check if deck has enough cards
   if (cardsInDeck < numCardsToDraw) numCardsToDraw = cardsInDeck;
 
   drawnCards = deck.splice(deck.length - numCardsToDraw, numCardsToDraw);
 
-  newHand = sortHand([...hand, ...drawnCards], trump);
+  newHand = sortHand([...hand, ...drawnCards], trump, player);
 
   return newHand;
 }
@@ -146,9 +150,9 @@ export function checkIfValidDefense(
   userPlay: any,
   trump: any
 ) {
-  console.log("USER Defending...");
-  console.log("User Play: ", userPlay);
-  console.log("AI Play: ", aiPlay);
+  // console.log("USER Defending...");
+  // console.log("User Play: ", userPlay);
+  // console.log("AI Play: ", aiPlay);
 
   let counterCardValue = parseInt(card.substring(0, 2));
   let counterCardSuit = card[2];
@@ -160,8 +164,6 @@ export function checkIfValidDefense(
     let cardToBeatSuit = cardToBeat[2];
 
     console.log("Card to beat: ", cardToBeat);
-    console.log("Card to beat value: ", cardToBeatValue);
-    console.log("Card to beat suit : ", cardToBeatSuit);
 
     if (counterCardSuit == cardToBeatSuit && counterCardValue > cardToBeatValue)
       return true;
@@ -172,10 +174,22 @@ export function checkIfValidDefense(
   }
 }
 
-export function getTrump(deck: any) {
+export function getTrump(deck: any, deckSize: any) {
   // get last card from deck and determien trump suit
-  let el = deck[51];
+  console.log(
+    "88888888888888   ---  SIZE  ---   8888888888888888888 : ",
+    deckSize,
+    deck
+  );
+  //deckSize = 52;
+  let el = deck[deckSize - 1]; //deck[35]; <-- Russian durak game
   let trumpSuit = "";
+  //
+  console.log(
+    "66666666666666666  SHOW ME AN ELEMENT  ^^^^^^^^^^^^^^^^^^   : ",
+    el
+  );
+  //
   trumpSuit = el.charAt(2);
 
   // place the card at beginning of deck

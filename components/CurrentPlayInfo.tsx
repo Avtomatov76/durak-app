@@ -1,108 +1,182 @@
-import { View, Text, Button, Dimensions } from "react-native";
+import { useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Linking,
+  Alert,
+  Button as Btn,
+} from "react-native";
+
+const aboutDurak = "https://en.wikipedia.org/wiki/Durak";
+const durakRules = "https://www.coololdgames.com/card-games/shedding/durak/";
+
+//const unsupportedURL = 'slack://open?team=123456';
+
+type OpenURLButtonProps = {
+  url: string;
+  children: string;
+};
+
+const OpenURLButton = ({ url, children }: OpenURLButtonProps) => {
+  const handlePress = useCallback(async () => {
+    // Checking if the link is supported for links with custom URL scheme.
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      // Opening the link with some app, if the URL scheme is "http" the web link should be opened
+      // by some browser in the mobile
+      await Linking.openURL(url);
+    } else {
+      Alert.alert(`Don't know how to open this URL: ${url}`);
+    }
+  }, [url]);
+
+  return (
+    <Text style={{ color: "#FFFFFF", fontWeight: "600" }} onPress={handlePress}>
+      {children}
+    </Text>
+
+    // <Btn title={children} onPress={handlePress} />
+  );
+};
 
 export default function CurrentPlayInfo(props: any) {
-  console.log("TRUMP: ", props.trump);
-  console.log("GAME STATUS: ", props.gameStatus);
+  function getTrumpSuit(trump: any) {
+    let suit = "";
+    switch (trump) {
+      case "h":
+        suit = "♥";
+        break;
+      case "s":
+        suit = "♠";
+        break;
+      case "c":
+        suit = "♣";
+        break;
+      case "d":
+        suit = "♦";
+        break;
+      default:
+        suit = "";
+    }
+    return suit;
+  }
 
-  //
-  // let suit = getTrumpSuit(props.trump);
-
-  // function getTrumpSuit(trump: any) {
-  //   let suit = "";
-  //   switch (trump) {
-  //     case "h":
-  //       suit = "Hearts";
-  //       break;
-  //     case "s":
-  //       suit = "Spades";
-  //       break;
-  //     case "c":
-  //       suit = "Clubs";
-  //       break;
-  //     case "d":
-  //       suit = "Diamonds";
-  //       break;
-  //     default:
-  //       suit = "";
-  //   }
-  //   return suit;
-  // }
-  //
+  const getColor = (trump: any) => {
+    let color = "";
+    switch (trump) {
+      case "h":
+        color = "red";
+        break;
+      case "s":
+        color = "black";
+        break;
+      case "c":
+        color = "black";
+        break;
+      case "d":
+        color = "red";
+        break;
+      default:
+        color = "#FFFFFF";
+    }
+    return color;
+  };
 
   if (props.gameStatus == false) return null;
 
   return (
-    <>
+    <View style={styles.infoScreen}>
       <View
         style={{
-          width: "50%",
-          flexDirection: "column",
-          alignSelf: "center",
-          borderWidth: 1,
-          borderColor: "#FFFFFF",
-          borderBottomStartRadius: 40,
-          borderBottomEndRadius: 40,
-          //marginTop: 10,
-          marginBottom: 10,
-          backgroundColor: "grey",
+          flex: 1,
+          flexDirection: "row",
+          marginRight: 5,
         }}
       >
-        <View style={{ flexDirection: "row" }}>
-          <Text
-            style={{
-              flex: 1,
-              textAlign: "center",
-              color: "#FFFFFF",
-              //marginRight: 30,
-            }}
-          >
-            Trump: {props.trump}
-          </Text>
-
-          <Text
-            style={{
-              flex: 1,
-              textAlign: "center",
-              color: "#FFFFFF",
-            }}
-          >
-            Turn:{" "}
-            <Text
-              style={{
-                color: props.turn == "ai" ? "red" : "blue", //"#FFFFFF",
-              }}
-            >
-              {props.turn}
-            </Text>
-          </Text>
-        </View>
-
-        <View
+        <Text
           style={{
-            display: "flex",
-            //width: Dimensions.get("screen").width,
-            flexDirection: "row",
-            justifyContent: "space-evenly",
-            marginBottom: 5,
+            color: "#FFFFFF",
+            marginLeft: 5,
           }}
         >
-          <View style={{ display: "flex", alignItems: "center" }}>
-            {/* <Text style={{ color: "red", fontWeight: "400" }}>AI</Text> */}
-            <Text style={{ color: "red", fontSize: 24, marginTop: 0 }}>
-              {props.numCardsAi}
-            </Text>
-          </View>
-          <View style={{ display: "flex" }}>
-            <Text style={{ color: "#FFFFFF", fontSize: 30 }}>{props.deck}</Text>
-          </View>
-          <View style={{ display: "flex", alignItems: "center" }}>
-            {/* <Text style={{ color: "blue", fontWeight: "400" }}>User</Text> */}
-            <Text style={{ color: "blue", fontSize: 24, marginTop: 0 }}>
-              {props.numCardsUser}
-            </Text>
-          </View>
-        </View>
+          Trump:&nbsp;
+        </Text>
+        <Text style={{ color: getColor(props.trump) }}>
+          {getTrumpSuit(props.trump)}
+        </Text>
       </View>
-    </>
+
+      {/* <Text
+        style={{
+          flex: 1,
+          textAlign: "center",
+          color: "purple",
+          marginLeft: 5,
+        }}
+      >
+        Cards:&nbsp;
+        <Text style={{ color: getColor(props.trump) }}>{props.deck}</Text>
+      </Text> */}
+
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          marginRight: 5,
+        }}
+      >
+        <Text style={{ color: "#FFFFFF" }}>Turn:&nbsp;</Text>
+        <Text
+          style={{
+            color: props.turn == "ai" ? "red" : "blue", //"#FFFFFF",
+            fontWeight: "600",
+          }}
+        >
+          {props.turn.toUpperCase()}
+        </Text>
+      </View>
+
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          marginRight: 5,
+          //alignSelf: "center",
+        }}
+      >
+        <OpenURLButton url={durakRules}>Rules</OpenURLButton>
+        {/* <Text style={{ color: "#FFFFFF" }}>Rules</Text> */}
+      </View>
+
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          marginRight: 5,
+        }}
+      >
+        <OpenURLButton url={aboutDurak}>About</OpenURLButton>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  infoScreen: {
+    width: "75%",
+    flexDirection: "row",
+    //justifyContent: "space-around", //"center",
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: "grey", //"#FFFFFF",
+    borderBottomStartRadius: 40,
+    borderBottomEndRadius: 40,
+    padding: 5,
+    paddingLeft: 15,
+    paddingRight: 15,
+    marginBottom: 10,
+    backgroundColor: "grey",
+  },
+});

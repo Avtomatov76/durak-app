@@ -1,82 +1,90 @@
-import { useState } from "react";
-import { View, Text, Dimensions } from "react-native";
+import { View, Text, Dimensions, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 import HandRenderer from "./HandRenderer";
+import { sortHand } from "../functions/playFunctions";
+
+const windowDimensions = Dimensions.get("window");
+const screenDimensions = Dimensions.get("screen");
 
 export default function User(props: any) {
-  console.log("USER hand cards: ", props.userHand);
+  let hand = props.userHand; //sortHand(props.trump, props.userHand) || []; <-- fix hand not being sorted as it comes into USER
+  //let sortedHand = sortHand(props.trump, hand) || []
 
   function endTurn() {
     props.completeTurn("userAttack");
   }
 
   return (
-    <View
-      style={{
-        //height: 200,
-        //flex: 1,
-        //alignSelf: "flex-end",
-        alignItems: "center",
-        //backgroundColor: "red",
-        justifyContent: "center",
-      }}
-    >
-      <View style={{ marginLeft: 80, marginBottom: 100 }}>
-        <View
-          style={{
-            position: "absolute",
-            width: 50,
-            height: 30,
-            backgroundColor: "brown",
-            //marginBottom: 10,
-          }}
-        >
-          <Text style={{ color: "#FFFFFF" }}>{props.deck[0]}</Text>
-        </View>
-        <View
-          style={{
-            position: "absolute",
-            width: 30,
-            height: 50,
-            backgroundColor: "purple",
-            marginLeft: 30,
-            marginTop: -10,
-          }}
-        >
-          <Text style={{ color: "#FFFFFF" }}>{props.deck.length}</Text>
-        </View>
+    <>
+      <View
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {!props.isUserActive ? null : (
+          <View
+            style={{
+              flexDirection: "row",
+              alignSelf: "center",
+              marginBottom: 20,
+            }}
+          >
+            <View style={{ borderRadius: 20 }}>
+              <Button
+                buttonColor="red"
+                textColor="#FFFFFF"
+                onPress={props.pickUpCards}
+              >
+                Pick Up
+              </Button>
+            </View>
+
+            {props.turn == "ai" ? null : (
+              <View style={{ marginLeft: 20, borderRadius: 20 }}>
+                <Button
+                  buttonColor="black"
+                  textColor="#FFFFFF"
+                  onPress={endTurn}
+                >
+                  Done
+                </Button>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* <Text style={{ color: "#FFFFFF", fontSize: 36 }}>You</Text> */}
+
+        {!hand ? null : (
+          <View
+            style={[
+              styles.useHand,
+              {
+                borderBottomWidth:
+                  hand.length == 0 ? 0 : props.turn == "user" ? 2 : 0,
+              },
+            ]}
+          >
+            <HandRenderer
+              isUserActive={props.isUserActive}
+              turn={props.turn}
+              hand={hand}
+              handleTurn={props.handleTurn}
+            />
+          </View>
+        )}
       </View>
-      {!props.isUserActive ? null : (
-        <View style={{ flexDirection: "row", marginBottom: 10 }}>
-          <View style={{ marginRight: 30, borderRadius: 20 }}>
-            <Button
-              buttonColor="orange"
-              textColor="#FFFFFF"
-              onPress={props.pickUpCards}
-            >
-              Pick Up
-            </Button>
-          </View>
-
-          <View style={{ borderRadius: 20 }}>
-            <Button buttonColor="black" textColor="#FFFFFF" onPress={endTurn}>
-              Pass
-            </Button>
-          </View>
-        </View>
-      )}
-
-      {/* <Text style={{ color: "#FFFFFF", fontSize: 36 }}>You</Text> */}
-
-      {!props.userHand ? null : (
-        <HandRenderer
-          flag="user"
-          isUserActive={props.isUserActive}
-          turn={props.turn}
-          hand={props.userHand}
-          handleTurn={props.handleTurn}
-        />
-      )}
-    </View>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  useHand: {
+    borderBottomColor: "blue", //"#FFFFFF",
+    marginBottom: 20,
+    paddingLeft: 2,
+
+    //borderRadius: 8,
+  },
+});

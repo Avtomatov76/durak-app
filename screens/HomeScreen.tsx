@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { View, Text, Dimensions } from "react-native";
-import { Modal, Portal, Provider, Button } from "react-native-paper";
+import { useState, useEffect } from "react";
+import { View, Dimensions, Platform } from "react-native";
+import { Portal, Provider, Button } from "react-native-paper";
 import { delay } from "../Config";
 import { getDeck } from "../assets/cards/Deck";
 import Ai from "../components/Ai";
 import CurrentPlay from "../components/CurrentPlay";
 import User from "../components/User";
-import { sortAiHand } from "../functions/aiFunctions";
 import {
   checkForLoser,
   checkHandForMatches,
@@ -17,10 +16,17 @@ import {
   removeCardsFromDeck,
   sortHand,
 } from "../functions/playFunctions";
-import LoserDisplay from "../modals/LoserDisplay";
+import ModalDisplay from "../modals/ModalDisplay";
 import CurrentPlayInfo from "../components/CurrentPlayInfo";
+import Deck from "../components/Deck";
+import Toast from "react-native-toast-message";
+import Discard from "../components/Discard";
+import Sound from "react-native-sound";
 
-let deck = getDeck();
+const windowDimensions = Dimensions.get("window");
+const screenDimensions = Dimensions.get("screen");
+
+// let deck = getDeck(36);
 let aiHand: any[] = [];
 let userHand: any[] = [];
 let trump = "";
@@ -30,11 +36,9 @@ let playHandObj = {
   user: [] as any,
 };
 
-console.log("Initial deck: ", deck);
-
 export default function HomeScreen(props: any) {
   const [gameCount, setGameCount] = useState(0);
-  const [gameStatus, setGameStatus] = useState(false);
+  const [gameStatus, setGameStatus] = useState(props.route.params.status); //useState(false); // useState(props.route.params.status); //
   const [isUserActive, setIsUserActive] = useState(false);
   const [cardsInPlay, setCardsInPlay] = useState<any>({
     ai: [] as any,
@@ -42,11 +46,21 @@ export default function HomeScreen(props: any) {
   });
   const [isLoser, setIsLoser] = useState("");
   const [showLoser, setShowLoser] = useState(false);
+  const [options, setOptions] = useState(true);
+  const [deckSize, setDeckSize] = useState(props.route.params.deckSize);
+  //
+  const [deck, setDeck] = useState(getDeck(deckSize));
+  //
+  useEffect(() => {
+    startGame();
+  }, []);
+  //
 
   function resetGame() {
     console.log("Resetting the game...");
 
-    deck = getDeck();
+    updateCardsInPlay([], []);
+
     aiHand = [];
     userHand = [];
     trump = "";
@@ -55,26 +69,35 @@ export default function HomeScreen(props: any) {
       ai: [] as any,
       user: [] as any,
     };
+    //deck = getDeck(deckSize); ???????????????  TESTING!!!!!!   ?????????????????????????
 
+    setOptions(true);
     setShowLoser(false);
-    startGame();
+    setGameStatus(false);
+    setIsUserActive(false);
+
+    props.navigation.navigate("Start", {
+      resetGame: true,
+    });
   }
 
   function startGame() {
+    console.log("STARTING GAME.............");
     let count = gameCount;
     count++;
     setGameCount(count);
     setGameStatus(true);
 
-    trump = getTrump(deck);
+    trump = getTrump(deck, deckSize);
     dealCards();
 
-    console.log(turn);
+    console.log("Starting game... Turn - ", turn);
     if (turn == "user") setIsUserActive(true);
     if (turn == "ai") beginAiTurn("");
   }
 
   function dealCards() {
+    console.log("DEALING CARDS.............");
     let user = [];
     let ai = [];
     // deal card one at a time to each player
@@ -88,8 +111,8 @@ export default function HomeScreen(props: any) {
 
     turn = getTurn(turn, trump, ai, user);
 
-    let sortedAiHand = sortHand(ai, trump);
-    let sortedUserHand = sortAiHand(user, trump);
+    let sortedAiHand = sortHand(ai, trump, "ai"); //sortAiHand(ai, trump); //sortHand(ai, trump);
+    let sortedUserHand = sortHand(user, trump, "user"); //sortAiHand(user, trump);
 
     aiHand = sortedAiHand.slice();
     userHand = sortedUserHand.slice();
@@ -101,18 +124,20 @@ export default function HomeScreen(props: any) {
     if (deck.length == 0) console.log("No more cards left in deck!!");
     // check hands for missing cards --> if 6 ore more - skip
     if (flag == "userAttack" && userHand.length < 6) {
-      userHand = removeCardsFromDeck(deck, userHand, trump) || ([] as any);
+      userHand =
+        removeCardsFromDeck(deck, userHand, trump, "user") || ([] as any);
 
       if (aiHand.length < 6) {
-        aiHand = removeCardsFromDeck(deck, aiHand, trump) || ([] as any);
+        aiHand = removeCardsFromDeck(deck, aiHand, trump, "ai") || ([] as any);
       }
     }
 
     if (flag == "aiAttack" && aiHand.length < 6) {
-      aiHand = removeCardsFromDeck(deck, aiHand, trump) || ([] as any);
+      aiHand = removeCardsFromDeck(deck, aiHand, trump, "ai") || ([] as any);
 
       if (userHand.length < 6) {
-        userHand = removeCardsFromDeck(deck, userHand, trump) || ([] as any);
+        userHand =
+          removeCardsFromDeck(deck, userHand, trump, "user") || ([] as any);
       }
     }
   }
@@ -142,20 +167,19 @@ export default function HomeScreen(props: any) {
       getUserResponse();
     }
 
-    console.log("Turn: ", turn);
-    console.log("Num ai cards: ", numAiCards);
-    console.log("AI play: ", aiPlay);
+    console.log(
+      `Turn: ${turn}, AI cards num: ${numAiCards}, AI play: ${aiPlay}`
+    );
     // If aiPlay is empty, find a low card and play it
     if (numAiCards == 0 || flag == "userSkip" || flag == "userDone") {
       if (flag == "userSkip" || "userDone") {
         aiPlay = [];
         userPlay = [];
+        drawCards("userAttack");
       }
-      //console.log("Turn: ", turn);
+
       let cardToPlay = aiHandArr[0];
       aiHandArr.splice(0, 1);
-      console.log("--- card to play --- ", cardToPlay);
-
       aiPlay.push(cardToPlay);
 
       updateCardsInPlay(aiPlay, userPlay);
@@ -164,27 +188,31 @@ export default function HomeScreen(props: any) {
 
       getUserResponse();
     } else if (
+      // What the HECK IS THIS???????!!!!!!!
       numAiCards == numUserCards &&
       aiHandArr.length > 0 &&
       userHandArr.length == 0
     ) {
+      //
       completeAiTurn("");
+      turn = "user";
+      //
     } else {
       cardMatch = checkHandForMatches(
         [...aiPlay, ...userPlay],
         aiHandArr,
         trump
       );
-      console.log("MATCHED CARD: ", cardMatch);
+      console.log("MATCHED CARD: ", cardMatch); //
       // if found matching cards - add one to the cardsInPlay and let user respond (un-hide user cards)
-      if (cardMatch != "") {
-        aiPlay.push(cardMatch);
-
-        updateCardsInPlay(aiPlay, userPlay);
-
+      if (cardMatch != "" && cardMatch != null) {
+        // ADDED CHECKING FOR NULL!!!!!!!
         aiHandArr.splice(aiHandArr.indexOf(cardMatch), 1);
 
         aiHand = aiHandArr.slice();
+        aiPlay.push(cardMatch);
+
+        updateCardsInPlay(aiPlay, userPlay);
 
         getUserResponse();
       } else {
@@ -193,8 +221,34 @@ export default function HomeScreen(props: any) {
     }
   }
 
+  //
+  const showToast = () => {
+    Toast.show({
+      // type: "success",
+      // text1: "Hello",
+      // text2: "This is some something 👋",
+      visibilityTime: 1000,
+      topOffset:
+        Platform.OS == "web"
+          ? windowDimensions.height / 3
+          : screenDimensions.height / 3,
+      type: "error",
+      text1: "!!!!",
+      text2: "You cannot play this card!",
+    });
+  };
+  //
+
   async function handleUserTurn(el: any, flag: any) {
-    console.log("User: ", el, flag);
+    console.log("User: ", el, flag); //
+
+    //
+    let loser = checkForLoser(deck, userHand, aiHand);
+    if (loser != "na") {
+      endGame(loser);
+      return;
+    }
+    //
 
     let aiPlay = playHandObj.ai.slice() || ([] as any); //cardsInPlay.ai.slice() || ([] as any);
     let userPlay = playHandObj.user.slice() || ([] as any); //cardsInPlay.user.slice() || ([] as any);
@@ -206,13 +260,13 @@ export default function HomeScreen(props: any) {
     let numUserCards = userPlay.length;
 
     if (flag == "userAttack" && numUserCards > aiHand.length + numAiCards) {
-      console.log("CAN'T ADD ANY MORE CARDS!!");
+      console.log("CAN'T ADD ANY MORE CARDS!!"); //
       completeUserTurn();
     }
 
     if (flag == "userAttack") {
       let isLegal = checkIfCardIsLegal(el, [...aiPlay, ...userPlay]);
-      console.log("Can this card be played? ", isLegal);
+      console.log("Can this card be played? ", isLegal); //
 
       if (isLegal) {
         userPlay.push(el);
@@ -224,9 +278,17 @@ export default function HomeScreen(props: any) {
         userHand = userHandArr.slice();
 
         await delay(1000);
-        console.log("User hand: ", userHand);
+        console.log("User hand: ", userHand); //
+
+        loser = checkForLoser(deck, userHand, aiHand);
+        if (loser != "na") {
+          endGame(loser);
+          return;
+        }
+
         handleAiDefence(userPlay, aiPlay, trump);
       } else {
+        showToast();
         console.log("You cannot play this card!!  Please select another card!");
       }
     }
@@ -245,6 +307,7 @@ export default function HomeScreen(props: any) {
         console.log(
           "You cannot defend with this this card!!  Please select another card!"
         );
+        showToast();
         return;
       }
 
@@ -254,20 +317,19 @@ export default function HomeScreen(props: any) {
 
   async function handleAiDefence(userPlay: any, aiPlay: any, trump: any) {
     console.log("AI Defending...");
-    console.log("AI hand: ", aiHand);
 
-    console.log("User Play: ", userPlay);
-    console.log("AI Play: ", aiPlay);
+    let loser = checkForLoser(deck, userHand, aiHand);
+
+    if (loser != "na") {
+      endGame(loser);
+      return;
+    }
 
     if (userPlay.length > aiPlay.length) {
       let index = userPlay.length - 1;
       let cardToBeat = userPlay[index];
       let cardToBeatValue = parseInt(cardToBeat.substring(0, 2));
       let cardToBeatSuit = cardToBeat[2];
-
-      console.log("Card to beat: ", cardToBeat);
-      console.log("Card to beat value: ", cardToBeatValue);
-      console.log("Card to beat suit : ", cardToBeatSuit);
 
       let counterCard = "";
 
@@ -285,6 +347,17 @@ export default function HomeScreen(props: any) {
       if (!counterCard) {
         console.log("Can't find card to counter!!  Picking up cards...");
         aiHand = await pickUpCards(aiHand);
+        drawCards("userAttack");
+
+        // ADDED FOR TESTING!!!!!!!!!
+        updateCardsInPlay([], []);
+
+        loser = checkForLoser(deck, userHand, aiHand);
+
+        if (loser != "na") {
+          endGame(loser);
+          return;
+        }
       }
 
       if (counterCard) {
@@ -300,28 +373,31 @@ export default function HomeScreen(props: any) {
   function completeAiTurn(flag: any) {
     let loser = checkForLoser(deck, userHand, aiHand);
 
-    if (loser == "na") {
-      // discard cardsInPlay
-      updateCardsInPlay([], []);
+    if (loser == "na" && flag == "userSkip") {
       drawCards("aiAttack");
-      // set turn to "user"
-      flag == "userSkip" ? (turn = "ai") : (turn = "user");
+      drawCards("userAttack");
+      turn = "ai";
+      updateCardsInPlay([], []);
+    } else if (loser == "na" && flag == "") {
+      drawCards("aiAttack");
+      drawCards("userAttack");
+      turn = "user";
+      updateCardsInPlay([], []);
     } else endGame(loser);
   }
 
   async function completeUserTurn() {
-    console.log(turn);
-    console.log("User cards in play size: ", playHandObj.user.length); //cardsInPlay.user.length);
-    console.log("AI cards in play size: ", playHandObj.ai.length); //cardsInPlay.ai.length);
     let loser = checkForLoser(deck, userHand, aiHand);
+
     if (loser != "na") {
       console.log("And the loser is..... : ", loser);
       endGame(loser);
+      return;
     }
 
     //if (cardsInPlay.user.length > cardsInPlay.ai.length) {
     if (playHandObj.user.length > playHandObj.ai.length) {
-      // air pick up cardsInPlay
+      // ai pick up cardsInPlay
       aiHand = await pickUpCards(aiHand); // || [] as any
       console.log("aiHand after pickup: ", aiHand);
       drawCards("userAttack");
@@ -332,6 +408,7 @@ export default function HomeScreen(props: any) {
     else if (playHandObj.ai.length == playHandObj.user.length) {
       updateCardsInPlay([], []);
       drawCards("userAttack");
+      drawCards("aiAttack");
       setIsUserActive(false);
 
       turn = "ai";
@@ -343,10 +420,11 @@ export default function HomeScreen(props: any) {
 
   async function pickUpCardsUser() {
     userHand = await pickUpCards(userHand);
+    setIsUserActive(false);
     turn = "ai";
 
     console.log("Cards in play after update: ", playHandObj); //cardsInPlay);
-    setIsUserActive(false);
+
     beginAiTurn("userSkip");
   }
 
@@ -354,10 +432,9 @@ export default function HomeScreen(props: any) {
     console.log("Picking up cards...");
     // take cardsInPlay and add to aiHand
     let newHand: any[] = [];
-    // let combinedHand = [...cardsInPlay.ai, ...cardsInPlay.user];
     let combinedHand = [...playHandObj.ai, ...playHandObj.user];
 
-    newHand = sortAiHand([...hand, ...combinedHand], trump);
+    newHand = sortHand([...hand, ...combinedHand], trump, "ai");
     console.log("Cards in play before update: ", playHandObj); //cardsInPlay);
 
     await updateCardsInPlay([], []);
@@ -380,23 +457,42 @@ export default function HomeScreen(props: any) {
 
     playHandObj.ai = aiPlay.length == 0 ? [] : aiPlay.slice();
     playHandObj.user = userPlay.length == 0 ? [] : userPlay.slice();
+
+    //if (turn == "ai") beginAiTurn("");
   }
 
   function endGame(loser: any) {
     console.log("ENDING THE GAME...");
 
+    setGameStatus(false);
     setIsLoser(loser);
     setShowLoser(true);
-    setGameStatus(false);
+
     // give an option to play again
     // if ai picks cards (look for flag) - its user's turn again
     // otherwise set turn to ai and prepare for defence
-
-    // set cardsInPlay to 0
-    // set both hands to 0
     // ask if user wants to play another game
     // set turn based on loser --> winner gets 1st turn
   }
+
+  console.log("GAME STATUS: ", gameStatus);
+
+  //
+  // const setSelectedDeckSize = (size: any) => {
+  //   setDeckSize(size);
+  //   //setDeck(deckSize);
+  // };
+
+  //
+  const hideModal = (flag: any) => {
+    if (flag == "options") setOptions(false);
+    else setShowLoser(false);
+  };
+  //
+
+  //
+  //console.log("SELECTED OPTION on Home Screen: ", deckSize);
+  //
 
   return (
     <Provider>
@@ -404,7 +500,7 @@ export default function HomeScreen(props: any) {
         <View
           style={{
             flex: 1,
-            backgroundColor: "green",
+            backgroundColor: "#8DE8C2",
           }}
         >
           {!gameStatus ? (
@@ -421,52 +517,93 @@ export default function HomeScreen(props: any) {
             </View>
           ) : null}
 
-          <View style={{ flex: 1, justifyContent: "space-evenly" }}>
+          <View style={{ display: "flex", flex: 1 }}>
             <CurrentPlayInfo
               turn={turn}
               deck={deck.length}
               trump={trump}
               gameStatus={gameStatus}
-              //numCards={props.gameHand.length + props.gameHand.length || 0}
-              numCardsUser={userHand.length}
-              numCardsAi={aiHand.length}
+              numCardsUser={!userHand ? null : userHand.length}
+              numCardsAi={!aiHand ? null : aiHand.length}
             />
             <Ai
+              turn={turn}
               gameStatus={gameStatus}
-              aiHand={aiHand}
+              aiHand={!aiHand ? null : aiHand}
               navigation={props.navigation}
             />
+          </View>
+
+          <View
+            style={{
+              position: "absolute",
+              display: "flex",
+              marginTop: windowDimensions.height / 2.5,
+              alignSelf: "center",
+            }}
+          >
             <CurrentPlay
               deck={deck.length}
               gameHand={cardsInPlay}
               turn={turn}
               trump={trump}
-              numCardsUser={userHand.length}
-              numCardsAi={aiHand.length}
+              numCardsUser={!userHand ? null : userHand.length}
+              numCardsAi={!aiHand ? null : aiHand.length}
             />
+          </View>
+
+          <View
+            style={{
+              display: "flex",
+              flex: 1,
+              justifyContent: "flex-end",
+            }}
+          >
+            {!gameStatus || deck.length == 0 ? null : (
+              <>
+                <View
+                  style={{
+                    position: "absolute",
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  <Discard deck={deck} />
+                </View>
+
+                <View
+                  style={{
+                    position: "absolute",
+                    alignSelf: "flex-end",
+                  }}
+                >
+                  <Deck deck={deck} />
+                </View>
+              </>
+            )}
             <User
-              userHand={userHand}
+              userHand={!userHand ? null : userHand}
               turn={turn}
               deck={deck}
+              trump={trump}
               isUserActive={isUserActive}
               pickUpCards={pickUpCardsUser}
               completeTurn={completeUserTurn}
               handleTurn={handleUserTurn}
             />
           </View>
-          <LoserDisplay
-            showLoser={showLoser}
-            hideLoser={() => setShowLoser(false)}
+          <ModalDisplay
+            //flag={options ? "options" : "loser"}
+            flag="loser"
+            deckSize={deckSize}
+            //selectDeckSize={setSelectedDeckSize}
+            //visible={options || showLoser}
+            visible={showLoser}
+            hideModal={hideModal} //
             loser={isLoser}
             resetGame={resetGame}
+            startGame={() => startGame()}
+            //setGameStatus={() => setGameStatus(true)}
           />
-          {/* {isLoser == "" ? null : (
-            <LoserDisplay
-              showLoser={showLoser}
-              hideLoser={() => setShowLoser(false)}
-              loser={isLoser}
-            />
-          )} */}
         </View>
       </Portal>
     </Provider>

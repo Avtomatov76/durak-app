@@ -1,15 +1,14 @@
-import { useState } from "react";
-import { View, Text, Button, Dimensions } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import HandRenderer from "./HandRenderer";
 
 export default function Ai(props: any) {
-  console.log("AI hand cards: ", props.aiHand);
+  console.log(
+    "------------------------------- GAME STATUS ------------------------------ : ",
+    props.gameStatus
+  );
   return (
     <View
       style={{
-        //height: 200,
-        //flex: 1,
-        //backgroundColor: "#FFFFFF",
         alignItems: "center",
       }}
     >
@@ -23,16 +22,56 @@ export default function Ai(props: any) {
         }}
       /> */}
 
-      <Text style={{ fontSize: 36, color: "#FFFFFF" }}>AI</Text>
-      <Text style={{ color: "#FFFFFF" }}>Displaying hidden card backs...</Text>
-
       {!props.aiHand ? null : (
-        <HandRenderer
-          flag="ai"
-          hand={props.aiHand}
-          handleTurn={props.handleTurn}
-        />
+        <>
+          {props.gameStatus == false ? null : (
+            <View style={styles.infoView}>
+              <Text style={styles.aiAvatar}>AI</Text>
+            </View>
+          )}
+          <View
+            style={[
+              styles.aiHand,
+              {
+                borderBottomWidth:
+                  props.aiHand.length == 0 ? 0 : props.turn == "ai" ? 2 : 0,
+              },
+            ]}
+          >
+            <HandRenderer
+              flag="ai"
+              hand={props.aiHand}
+              handleTurn={props.handleTurn}
+            />
+          </View>
+        </>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  infoView: {
+    marginTop: 10,
+    marginBottom: 10,
+    width: 55,
+    height: 55,
+    backgroundColor: "#000000",
+    borderRadius: 50,
+    justifyContent: "center",
+  },
+  aiAvatar: {
+    alignSelf: "center",
+    fontSize: 28,
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  aiHand: {
+    borderColor: "red",
+    marginTop: 10,
+    marginBottom: 20,
+    paddingLeft: 2,
+    //borderRadius: 8,
+    transform: [{ rotate: "180deg" }],
+  },
+});

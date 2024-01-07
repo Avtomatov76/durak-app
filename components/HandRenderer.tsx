@@ -1,8 +1,50 @@
-import { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  Platform,
+} from "react-native";
+import Card from "./Card";
+
+const windowDimensions = Dimensions.get("window");
+const screenDimensions = Dimensions.get("screen");
 
 export default function HandRederer(props: any) {
-  let flag = props.flag;
+  // 23 --> index of 11 is the half way of the array
+  let degrees = [
+    -25, -23, -21, -19, -17, -15, -13, -11, -9, -7, -5, 0, 5, 7, 9, 11, 13, 15,
+    17, 19, 21, 23, 25,
+  ];
+
+  const calculateAngle = (index: any, type: any) => {
+    if (type == "currPlay") {
+      let anglesArray = [-6, -4, -2, 0, 2, 4, 6];
+
+      let angleIndex = Math.floor(Math.random() * 7);
+
+      return [{ rotate: "0deg" }];
+      //return [{ rotate: `${anglesArray[angleIndex]}deg` }];
+    }
+
+    let size = props.hand.length;
+    let startPoint = 0;
+    let rotation = (size / 2) * -5;
+    //
+
+    if (size == 1) return [{ rotate: "0deg" }];
+
+    // if (length > 0 && length % 2 != 0) {
+    //   startPoint = length - (1 / 2) * -5;
+    // } else {
+    // }
+
+    let cardIndex = 11 - Math.floor(size / 2) + index;
+
+    // return [{ rotate: `${degrees[index]}deg` }];
+    return [{ rotate: `${degrees[cardIndex]}deg` }];
+  };
 
   const handlePress = (el: any) => {
     if (!props.isUserActive) {
@@ -14,48 +56,80 @@ export default function HandRederer(props: any) {
     if (props.turn == "ai") props.handleTurn(el, "userDefense");
   };
 
-  if (!props.hand) return null;
+  if (props.hand.length == 0) return null;
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        flexWrap: "wrap",
-        marginTop: 10,
-        marginBottom: 10,
-      }}
-    >
-      {props.hand.map((el: any, index: any) => (
-        <TouchableOpacity
-          key={index}
-          disabled={props.status == "game" ? true : false}
+    <>
+      {props.hand.length > 7 ? (
+        <View
           style={{
-            width: 50,
-            height: 80,
-            justifyContent: "center",
-            borderWidth: 1,
-            borderColor: "#FFFFFF", //flag == "ai" ? "#000000" : "#FFFFFF",
-            borderRadius: 10,
-            //marginLeft: -10,
-            //marginRight: -10,
-            margin: 2,
-            marginRight: 2,
-            marginLeft: props.status == "game" ? 0 : -10,
-            backgroundColor: flag == "ai" ? "red" : "blue",
+            display: "flex",
+            flexDirection: "row",
+            width:
+              Platform.OS == "web"
+                ? 350 //windowDimensions.width - 80
+                : screenDimensions.width - 80,
           }}
         >
-          <Text
-            style={{
-              color: "#FFFFFF", //flag == "ai" ? "#000000" : "#FFFFFF",
-              fontSize: 24,
-              // marginLeft: -10,
+          <Text style={[styles.arrow, { marginRight: 10 }]}>&#x3c;</Text>
+          <ScrollView
+            horizontal
+            contentContainerStyle={{
+              paddingVertical: 5,
+              paddingLeft: 10,
+              paddingRight: 10,
             }}
-            onPress={() => handlePress(el)}
+            style={{
+              backgroundColor: "purple",
+            }}
           >
-            {el}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+            {props.hand.map((el: any, index: any) => (
+              <Card
+                key={index}
+                type="currPlay"
+                card={el}
+                index={index}
+                status={props.status}
+                size={!props.hand ? 0 : props.hand.length}
+                calculateAngle={calculateAngle}
+                handlePress={handlePress}
+              />
+            ))}
+          </ScrollView>
+          <Text style={[styles.arrow, { marginLeft: 10 }]}>&#x3e;</Text>
+        </View>
+      ) : (
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            marginLeft: props.status == "game" ? 0 : 30,
+            marginBottom: 10, // Added for testing
+          }}
+        >
+          {props.hand.map((el: any, index: any) => (
+            <Card
+              key={index}
+              card={el}
+              index={index}
+              status={props.status}
+              size={!props.hand ? 0 : props.hand.length}
+              type={props.type}
+              calculateAngle={calculateAngle}
+              handlePress={handlePress}
+            />
+          ))}
+        </View>
+      )}
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  arrow: {
+    fontSize: 20,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    alignSelf: "center",
+  },
+});

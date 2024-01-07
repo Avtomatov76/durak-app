@@ -1,86 +1,86 @@
-import { useState } from "react";
-import { View, Text, Button, Dimensions } from "react-native";
-import CurrentPlayInfo from "./CurrentPlayInfo";
+import { View } from "react-native";
 import HandRenderer from "./HandRenderer";
 
 export default function CurrentPlay(props: any) {
-  // let suit = getTrumpSuit(props.trump);
-
-  // function getTrumpSuit(trump: any) {
-  //   let suit = "";
-  //   switch (trump) {
-  //     case "h":
-  //       suit = "Hearts";
-  //       break;
-  //     case "s":
-  //       suit = "Spades";
-  //       break;
-  //     case "c":
-  //       suit = "Clubs";
-  //       break;
-  //     case "d":
-  //       suit = "Diamonds";
-  //       break;
-  //     default:
-  //       suit = "";
-  //   }
-  //   return suit;
-  // }
-
   const showPlayHand = () => {
-    if (props.turn == "user") {
+    if (props.turn == "ai")
       return (
-        <View
-        //style={{ marginRight: 2 }}
-        >
+        <View>
           <View
             style={{
-              marginBottom: props.turn == "ai" ? 10 : -50,
-              zIndex: 1000,
+              alignSelf: "center",
+              marginBottom: props.turn == "ai" ? 0 : -70,
+              zIndex: props.turn == "ai" ? 0 : 1000,
             }}
           >
-            <HandRenderer flag="ai" status="game" hand={props.gameHand.ai} />
-          </View>
-          <View style={{ zIndex: 50 }}>
             <HandRenderer
-              flag="user"
+              type="currPlay"
+              flag="ai"
               status="game"
-              hand={props.gameHand.user}
+              turn={props.turn}
+              hand={props.gameHand.ai}
             />
           </View>
-        </View>
-      );
-    }
 
-    if (props.turn == "ai") {
-      return (
-        <View
-        //style={{ marginRight: 2 }}
-        >
           <View
-          //style={{ marginBottom: props.turn == "ai" ? 10 : -50 }}
+            style={{
+              marginTop: props.turn == "user" ? 0 : -70,
+              zIndex: props.turn == "user" ? 0 : 1000,
+            }}
           >
-            <HandRenderer flag="ai" status="game" hand={props.gameHand.ai} />
-          </View>
-          <View style={{ marginTop: props.turn == "user" ? 10 : -50 }}>
             <HandRenderer
+              type="currPlay"
               flag="user"
               status="game"
+              turn={props.turn}
               hand={props.gameHand.user}
             />
           </View>
         </View>
       );
-    }
+
+    if (props.turn == "user")
+      return (
+        <View>
+          <View
+            style={{
+              alignSelf: "center",
+              marginBottom: props.turn == "user" ? 0 : -70,
+              zIndex: props.turn == "user" ? 0 : 1000,
+            }}
+          >
+            <HandRenderer
+              type="currPlay"
+              flag="user"
+              status="game"
+              turn={props.turn}
+              hand={props.gameHand.user}
+            />
+          </View>
+
+          <View
+            style={{
+              marginTop: props.turn == "ai" ? 0 : -123,
+              zIndex: props.turn == "ai" ? 0 : 1000,
+            }}
+          >
+            <HandRenderer
+              type="currPlay"
+              flag="ai"
+              status="game"
+              turn={props.turn}
+              hand={props.gameHand.ai}
+            />
+          </View>
+        </View>
+      );
   };
 
   return (
     <View
       style={{
-        flex: 2,
-        flexDirection: "column",
-        marginTop: 50,
-        //backgroundColor: "blue",
+        display: "flex",
+        flexDirection: "row",
         alignSelf: "center",
       }}
     >

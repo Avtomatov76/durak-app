@@ -4,8 +4,10 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "react-native-paper";
+import StartScreen from "./screens/StartScreen";
 import HomeScreen from "./screens/HomeScreen";
 import AboutScreen from "./screens/AboutScreen";
+import Toast from "react-native-toast-message";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -15,14 +17,26 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
+          name="Start"
+          component={StartScreen}
+          options={{
+            headerShown: false,
+            title: "Welcome to Durak Game!",
+          }}
+        />
+        <Stack.Screen
           name="Home"
           component={HomeScreen}
           options={{
+            headerShown: false,
             title: "Welcome to Durak Game!",
           }}
         />
         <Stack.Screen name="About" component={AboutScreen} />
       </Stack.Navigator>
+
+      <Toast />
+      <StatusBar hidden={true} />
     </NavigationContainer>
 
     // <NavigationContainer>
