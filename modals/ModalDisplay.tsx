@@ -1,53 +1,60 @@
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { Modal, Portal, Button, Provider } from "react-native-paper";
-import { Picker } from "@react-native-picker/picker";
+import { Modal, RadioButton } from "react-native-paper";
 
 export default function ModalDisplay(props: any) {
-  const [selectedOption, setSelectedOption] = useState(props.deckSize);
-  // Show modal at the beginning to choose between 36 and 52 cards (or other options)
-  // Upon choosing an option, hide modal and pass the option to the HomeScreen to continue
+  const [checked, setChecked] = useState(36);
 
-  // give user option to play more or to end
-  // if play/finish - end the game and reset everything except the game count
-
-  //console.log("--- selected option 1 --- : ", selectedOption);
-
-  const handlePress = () => {
-    if (selectedOption == "default") return;
-
+  const handleSubmit = () => {
     if (props.flag == "options") {
-      props.selectDeckSize(selectedOption || 36);
+      props.selectDeckSize(checked || 36);
     } else props.resetGame();
+    props.hideLoser;
   };
 
-  //
-  // console.log("MODAL DISPLAY OPTIONS: ", props.flag);
-  // console.log("MODAL DISPLAY VISIBLE: ", props.visible);
-  //
+  const handlePress = (option: any) => {
+    setChecked(parseInt(option));
+    console.log("OPTION selected: ", option);
+  };
+
   const displayOptions = () => {
     return (
-      <View
-        //style={{ padding: 0, margin: 0 }}
-        style={styles.pickerContainer}
-      >
-        <Picker
-          style={styles.pickerStyles}
-          selectedValue={selectedOption}
-          onValueChange={(itemValue, itemIndex) => setSelectedOption(itemValue)}
+      <View style={styles.pickerContainer}>
+        <Pressable
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "flex-start",
+          }}
+          onPress={() => handlePress("36")}
         >
-          <Picker.Item
-            label="Russian Fool (36 cards)"
-            value={36}
-            //style={{ height: 60, backgroundColor: "red" }}
+          <RadioButton
+            value={checked.toString()}
+            status={checked.toString() == "36" ? "checked" : "unchecked"}
+            onPress={() => handlePress("36")}
           />
-          <Picker.Item label="Full deck (52 cards)" value={52} />
-        </Picker>
+          <Text style={{ padding: 5 }}>Russian Fool &#x28;36 cards&#x29;</Text>
+        </Pressable>
+
+        <Pressable
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "flex-start",
+          }}
+          onPress={() => handlePress("52")}
+        >
+          <RadioButton
+            value={checked.toString()}
+            status={checked.toString() == "52" ? "checked" : "unchecked"}
+            onPress={() => handlePress("52")}
+          />
+          <Text style={{ padding: 5 }}>Full deck &#x28;52 cards&#x29;</Text>
+        </Pressable>
       </View>
     );
   };
 
-  //
   const displayLoserMessage = () => {
     return (
       <View style={{ flexDirection: "column" }}>
@@ -62,7 +69,6 @@ export default function ModalDisplay(props: any) {
       </View>
     );
   };
-  //
 
   return (
     <Modal
@@ -73,33 +79,19 @@ export default function ModalDisplay(props: any) {
       {props.flag == "options" ? displayOptions() : displayLoserMessage()}
       <Pressable
         style={[styles.button, styles.buttonClose]}
-        onPress={props.hideLoser}
+        onPress={handleSubmit}
       >
-        <Text style={styles.btnText} onPress={handlePress}>
-          Ok
-        </Text>
+        <Text style={styles.btnText}>Ok</Text>
       </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  containerStyle: {
-    height: "30%",
-    backgroundColor: "white",
-    padding: 35,
-    margin: 20,
-    borderRadius: 20,
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "grey",
-  },
   modalView: {
     justifyContent: "space-between",
-    height: 150, //"33%",
+    height: 200, //"33%",
+    marginTop: 50,
     marginLeft: 35,
     marginRight: 35,
     backgroundColor: "white",
@@ -116,12 +108,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   button: {
-    borderRadius: 20,
+    borderRadius: 50,
     padding: 10,
     elevation: 2,
-  },
-  buttonOpen: {
-    backgroundColor: "#F194FF",
   },
   buttonClose: {
     backgroundColor: "#2196F3",
@@ -141,16 +130,13 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "bold",
     textAlign: "center",
+    padding: 5,
   },
   pickerContainer: {
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-  },
-  pickerStyles: {
-    width: "70%",
-    backgroundColor: "gray",
-    color: "white",
+    marginBottom: 20,
   },
 });

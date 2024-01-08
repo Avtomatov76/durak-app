@@ -27,7 +27,7 @@ export default function StartScreen(props: any) {
   };
 
   return (
-    <View style={{ marginTop: 100 }}>
+    <View style={{ height: "100%" }}>
       <ModalDisplay
         flag="options"
         selectDeckSize={setSelectedDeckSize}

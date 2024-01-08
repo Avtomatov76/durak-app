@@ -34,7 +34,8 @@
     "react-native-toast-message": "^2.1.8",
     "react-native-web": "~0.18.11",
     "react-navigation-stack": "^2.10.4",
-    "typescript": "^5.0.2"
+    "typescript": "^5.0.2",
+    "expo-checkbox": "~2.3.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
