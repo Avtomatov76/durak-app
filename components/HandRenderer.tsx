@@ -20,29 +20,15 @@ export default function HandRederer(props: any) {
 
   const calculateAngle = (index: any, type: any) => {
     if (type == "currPlay") {
-      let anglesArray = [-6, -4, -2, 0, 2, 4, 6];
-
-      let angleIndex = Math.floor(Math.random() * 7);
-
       return [{ rotate: "0deg" }];
-      //return [{ rotate: `${anglesArray[angleIndex]}deg` }];
     }
 
     let size = props.hand.length;
-    let startPoint = 0;
-    let rotation = (size / 2) * -5;
-    //
 
     if (size == 1) return [{ rotate: "0deg" }];
 
-    // if (length > 0 && length % 2 != 0) {
-    //   startPoint = length - (1 / 2) * -5;
-    // } else {
-    // }
-
     let cardIndex = 11 - Math.floor(size / 2) + index;
 
-    // return [{ rotate: `${degrees[index]}deg` }];
     return [{ rotate: `${degrees[cardIndex]}deg` }];
   };
 

@@ -1,10 +1,6 @@
-import { View, Text, Dimensions, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 import HandRenderer from "./HandRenderer";
-import { sortHand } from "../functions/playFunctions";
-
-const windowDimensions = Dimensions.get("window");
-const screenDimensions = Dimensions.get("screen");
 
 export default function User(props: any) {
   let hand = props.userHand; //sortHand(props.trump, props.userHand) || []; <-- fix hand not being sorted as it comes into USER
@@ -54,8 +50,6 @@ export default function User(props: any) {
           </View>
         )}
 
-        {/* <Text style={{ color: "#FFFFFF", fontSize: 36 }}>You</Text> */}
-
         {!hand ? null : (
           <View
             style={[
@@ -81,10 +75,8 @@ export default function User(props: any) {
 
 const styles = StyleSheet.create({
   useHand: {
-    borderBottomColor: "blue", //"#FFFFFF",
+    borderBottomColor: "blue",
     marginBottom: 20,
     paddingLeft: 2,
-
-    //borderRadius: 8,
   },
 });

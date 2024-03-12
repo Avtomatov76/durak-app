@@ -1,14 +1,9 @@
 import { useState, useEffect } from "react";
-import { View, Text, Button } from "react-native";
+import { View } from "react-native";
 import ModalDisplay from "../modals/ModalDisplay";
 
 export default function StartScreen(props: any) {
   const [options, setOptions] = useState(true);
-
-  //   console.log(
-  //     "What is coming from the the HOME SCREEN -------------------------- : ",
-  //     props.route
-  //   );
 
   useEffect(() => {
     if (props.route.params && props.route.params.resetGame == true)

@@ -1,17 +1,8 @@
 import { useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Linking,
-  Alert,
-  Button as Btn,
-} from "react-native";
+import { View, Text, StyleSheet, Linking, Alert } from "react-native";
 
 const aboutDurak = "https://en.wikipedia.org/wiki/Durak";
 const durakRules = "https://www.coololdgames.com/card-games/shedding/durak/";
-
-//const unsupportedURL = 'slack://open?team=123456';
 
 type OpenURLButtonProps = {
   url: string;
@@ -36,8 +27,6 @@ const OpenURLButton = ({ url, children }: OpenURLButtonProps) => {
     <Text style={{ color: "#FFFFFF", fontWeight: "600" }} onPress={handlePress}>
       {children}
     </Text>
-
-    // <Btn title={children} onPress={handlePress} />
   );
 };
 
@@ -108,18 +97,6 @@ export default function CurrentPlayInfo(props: any) {
         </Text>
       </View>
 
-      {/* <Text
-        style={{
-          flex: 1,
-          textAlign: "center",
-          color: "purple",
-          marginLeft: 5,
-        }}
-      >
-        Cards:&nbsp;
-        <Text style={{ color: getColor(props.trump) }}>{props.deck}</Text>
-      </Text> */}
-
       <View
         style={{
           flex: 1,
@@ -130,7 +107,7 @@ export default function CurrentPlayInfo(props: any) {
         <Text style={{ color: "#FFFFFF" }}>Turn:&nbsp;</Text>
         <Text
           style={{
-            color: props.turn == "ai" ? "red" : "blue", //"#FFFFFF",
+            color: props.turn == "ai" ? "red" : "blue",
             fontWeight: "600",
           }}
         >
@@ -147,7 +124,6 @@ export default function CurrentPlayInfo(props: any) {
         }}
       >
         <OpenURLButton url={durakRules}>Rules</OpenURLButton>
-        {/* <Text style={{ color: "#FFFFFF" }}>Rules</Text> */}
       </View>
 
       <View
@@ -167,7 +143,6 @@ const styles = StyleSheet.create({
   infoScreen: {
     width: "75%",
     flexDirection: "row",
-    //justifyContent: "space-around", //"center",
     alignSelf: "center",
     borderWidth: 1,
     borderColor: "grey", //"#FFFFFF",

@@ -57,7 +57,7 @@ export default function ModalDisplay(props: any) {
 
   const displayLoserMessage = () => {
     return (
-      <View style={{ flexDirection: "column" }}>
+      <View style={{ flexDirection: "column", marginBottom: 20 }}>
         {props.loser == "wash" ? (
           <Text style={styles.modalText}>No one is a fool! It's a wash!</Text>
         ) : (
@@ -90,7 +90,7 @@ export default function ModalDisplay(props: any) {
 const styles = StyleSheet.create({
   modalView: {
     justifyContent: "space-between",
-    height: 200, //"33%",
+    height: 250, //"33%",
     marginTop: 50,
     marginLeft: 35,
     marginRight: 35,

@@ -12,16 +12,6 @@ export default function Ai(props: any) {
         alignItems: "center",
       }}
     >
-      {/* <Button
-        title="Go to About"
-        onPress={() => {
-          props.navigation.navigate("About", {
-            userId: 1,
-            userName: "Awesome User",
-          });
-        }}
-      /> */}
-
       {!props.aiHand ? null : (
         <>
           {props.gameStatus == false ? null : (
@@ -71,7 +61,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
     paddingLeft: 2,
-    //borderRadius: 8,
     transform: [{ rotate: "180deg" }],
   },
 });

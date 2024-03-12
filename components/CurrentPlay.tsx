@@ -24,7 +24,7 @@ export default function CurrentPlay(props: any) {
 
           <View
             style={{
-              marginTop: props.turn == "user" ? 0 : -70,
+              marginTop: props.turn == "user" ? 0 : -82, //-70,
               zIndex: props.turn == "user" ? 0 : 1000,
             }}
           >
@@ -45,7 +45,7 @@ export default function CurrentPlay(props: any) {
           <View
             style={{
               alignSelf: "center",
-              marginBottom: props.turn == "user" ? 0 : -70,
+              marginBottom: props.turn == "user" ? -10 : -70,
               zIndex: props.turn == "user" ? 0 : 1000,
             }}
           >

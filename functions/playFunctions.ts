@@ -108,12 +108,10 @@ export function checkHandForMatches(playHand: any, aiHand: any, trump: any) {
 
   playHand.forEach((card: any) => {
     let cardValue = parseInt(card.substring(0, 2));
-    console.log("value: ", cardValue);
 
     let matched = aiHand.filter(
       (c: any) => parseInt(c.substring(0, 2)) == cardValue && c[2] != trump
     );
-    console.log("matched: ", matched);
 
     if (matched.length > 0) match = matched[0];
   });
@@ -150,10 +148,6 @@ export function checkIfValidDefense(
   userPlay: any,
   trump: any
 ) {
-  // console.log("USER Defending...");
-  // console.log("User Play: ", userPlay);
-  // console.log("AI Play: ", aiPlay);
-
   let counterCardValue = parseInt(card.substring(0, 2));
   let counterCardSuit = card[2];
 
@@ -162,8 +156,6 @@ export function checkIfValidDefense(
     let cardToBeat = aiPlay[index];
     let cardToBeatValue = parseInt(cardToBeat.substring(0, 2));
     let cardToBeatSuit = cardToBeat[2];
-
-    console.log("Card to beat: ", cardToBeat);
 
     if (counterCardSuit == cardToBeatSuit && counterCardValue > cardToBeatValue)
       return true;
@@ -176,28 +168,15 @@ export function checkIfValidDefense(
 
 export function getTrump(deck: any, deckSize: any) {
   // get last card from deck and determien trump suit
-  console.log(
-    "88888888888888   ---  SIZE  ---   8888888888888888888 : ",
-    deckSize,
-    deck
-  );
-  //deckSize = 52;
-  let el = deck[deckSize - 1]; //deck[35]; <-- Russian durak game
+  let el = deck[deckSize - 1];
   let trumpSuit = "";
-  //
-  console.log(
-    "66666666666666666  SHOW ME AN ELEMENT  ^^^^^^^^^^^^^^^^^^   : ",
-    el
-  );
-  //
+
   trumpSuit = el.charAt(2);
 
   // place the card at beginning of deck
   let trumpCard = deck.pop() || "";
-  console.log("Trump suit: ", trumpCard);
 
   deck.unshift(trumpCard);
-  console.log("Card moved to the beginning: ", deck);
 
   return trumpSuit;
 }
